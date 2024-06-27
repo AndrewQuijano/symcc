@@ -13,7 +13,7 @@
 // SymCC. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Symbolizer.h"
-
+#include <iostream>
 #include <cstdint>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/IR/Constants.h>
@@ -24,6 +24,9 @@
 #include "Runtime.h"
 
 using namespace llvm;
+
+#include <system_error>
+#include <fstream>
 
 void Symbolizer::symbolizeFunctionArguments(Function &F) {
   // The main function doesn't receive symbolic arguments.
@@ -437,7 +440,8 @@ void Symbolizer::visitSelectInst(SelectInst &I) {
   // negated) condition to the path constraints and copy the symbolic
   // expression over from the chosen argument.
 
-  IRBuilder<> IRB(&I);
+  IRBuilder<> IRB(&I); 
+  std::cout << "I am at visitSelectInst\n";
   auto runtimeCall = buildRuntimeCall(IRB, runtime.pushPathConstraint,
                                       {{I.getCondition(), true},
                                        {I.getCondition(), false},
@@ -488,6 +492,19 @@ void Symbolizer::visitBranchInst(BranchInst &I) {
     return;
 
   IRBuilder<> IRB(&I);
+  std::cout << "I am at visitBranchInst\n";
+
+  // Print the condition of the BranchInst to the standard output
+  Value *condition = I.getCondition();
+  condition->print(llvm::errs());
+  std::cout << "\n";
+
+  // Print the condition of the BranchInst to the file
+  OS.seek(size);
+  condition->print(OS);
+  OS << "\n";
+
+  
   auto runtimeCall = buildRuntimeCall(IRB, runtime.pushPathConstraint,
                                       {{I.getCondition(), true},
                                        {I.getCondition(), false},
@@ -903,8 +920,10 @@ void Symbolizer::visitSwitchInst(SwitchInst &I) {
   // Switch compares a value against a set of integer constants; duplicate
   // constants are not allowed
   // (https://llvm.org/docs/LangRef.html#switch-instruction).
-
+  
   IRBuilder<> IRB(&I);
+  std::cout << "I am at visitSwitchInst\n";
+  
   auto *condition = I.getCondition();
   auto *conditionExpr = getSymbolicExpression(condition);
   if (conditionExpr == nullptr)
@@ -1090,6 +1109,7 @@ Symbolizer::SymbolicComputation Symbolizer::forceBuildRuntimeCall(
 void Symbolizer::tryAlternative(IRBuilder<> &IRB, Value *V) {
   auto *destExpr = getSymbolicExpression(V);
   if (destExpr != nullptr) {
+    std::cout << "I am at try Alternative\n";
     auto *concreteDestExpr = createValueExpression(V, IRB);
     auto *destAssertion =
         IRB.CreateCall(runtime.comparisonHandlers[CmpInst::ICMP_EQ],
