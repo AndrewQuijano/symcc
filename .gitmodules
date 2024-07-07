@@ -1,4 +1,4 @@
 [submodule "runtime"]
 	path = runtime
-	url = https://github.com/andrewquijano/symcc-rt.git
+	url = git@github.com:AndrewQuijano/symcc-rt.git
 	branch = main
