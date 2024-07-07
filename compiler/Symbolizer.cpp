@@ -500,10 +500,6 @@ void Symbolizer::visitBranchInst(BranchInst &I) {
   std::cout << "\n";
 
   // Print the condition of the BranchInst to the file
-  OS.seek(size);
-  condition->print(OS);
-  OS << "\n";
-
   
   auto runtimeCall = buildRuntimeCall(IRB, runtime.pushPathConstraint,
                                       {{I.getCondition(), true},
